@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login / Signup</title>
+
+  <style>
+    /* ---------- GLOBAL BACKGROUND DESIGN ---------- */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      /* Gradient */
+      background: linear-gradient(135deg, #dbeafe, #f3e8ff);
+      overflow: hidden;
+    }
+
+    /* Floating animated blobs */
+    .bg-blob {
+      position: absolute;
+      width: 350px;
+      height: 350px;
+      background: rgba(99, 102, 241, 0.35);
+      filter: blur(80px);
+      border-radius: 50%;
+      animation: blobMove 14s infinite ease-in-out;
+      z-index: -2;
+    }
+
+    .bg-blob:nth-child(1) {
+      top: -80px;
+      left: -80px;
+    }
+
+    .bg-blob:nth-child(2) {
+      bottom: -80px;
+      right: -70px;
+      background: rgba(147, 51, 234, 0.35);
+      animation-delay: 3s;
+    }
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    @keyframes blobMove {
+      0% { transform: translate(0,0) scale(1); }
+      50% { transform: translate(40px, -30px) scale(1.25); }
+      100% { transform: translate(0,0) scale(1); }
+    }
+
+    /* Soft glow circles */
+    .glow-circle {
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.5), rgba(255,255,255,0));
+      filter: blur(40px);
+      z-index: -1;
+    }
+
+    .glow-circle:nth-child(3) {
+      top: 20%;
+      left: 20%;
+    }
+
+    .glow-circle:nth-child(4) {
+      bottom: 15%;
+      right: 25%;
+    }
+
+    /* ---------- CONTAINER ---------- */
+    .container {
+      width: 100%;
+      max-width: 400px;
+      background: #ffffffbb;
+      backdrop-filter: blur(12px);
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+      text-align: center;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    
+
+    .illustration {
+      background-image: url("LOGO.jpg");
+      background-size: 100% 200px;
+      background-position: center;
+      background-repeat: no-repeat;
+      width: 100%;
+      height: 60px;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ---------- FORM ---------- */
+    input {
+      width: 100%;
+      padding: 0.6rem;
+      margin: 0.5rem 0;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+
+    input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 6px rgba(37, 99, 235, 0.35);
+      outline: none;
+    }
+
+    button.primary {
+      width: 100%;
+      padding: 0.6rem;
+      margin-top: 0.5rem;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button.primary:hover {
+      background: #1e40af;
+      box-shadow: 0 0 12px rgba(37, 99, 235, 0.5);
+    }
+
+    /* Divider */
+    .divider {
+      margin: 1rem 0;
+      display: flex;
+      align-items: center;
+      text-align: center;
+      color: #9ca3af;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .divider:not(:empty)::before { margin-right: .75em; }
+    .divider:not(:empty)::after { margin-left: .75em; }
+
+    /* Social Buttons */
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 0.6rem;
+      margin: 0.5rem 0;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.25s ease-in-out;
+    }
+
+    .social-btn:hover {
+      background: #f3f4f6;
+      transform: scale(1.03) rotate(-1deg);
+    }
+
+    .links {
+      margin-top: 0.5rem;
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .links a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+
+    .links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- BEAUTIFUL BACKGROUND ELEMENTS -->
+  <div class="bg-blob"></div>
+  <div class="bg-blob"></div>
+  <div class="glow-circle"></div>
+  <div class="glow-circle"></div>
+
+  <!-- MAIN CONTAINER -->
+  <div class="container">
+
+    <div class="illustration"></div>
+
+    <input type="email" placeholder="Email">
+    <input type="password" placeholder="Password">
+
+    <button class="primary">Sign Up</button>
+
+    <div class="links">
+      <p><a href="#">Forgot password?</a></p>
+      <p>Already have an account? <a href="#">Login</a></p>
+    </div>
+
+    <div class="divider">or</div>
+
+    <div class="social-btn">Continue with Google</div>
+    <div class="social-btn">Continue with Facebook</div>
+
+  </div>
+
+</body>
+</html>

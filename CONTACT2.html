@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediConnect - Blue Theme</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff; /* White background */
+            color: #1e3a8a; /* Dark Blue text */
+            padding-bottom: 120px;
+        }
+
+        /* Pulse animation for SOS Button */
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(220, 38, 38, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+        
+        .sos-pulse {
+            animation: pulse-red 2s infinite;
+        }
+
+        /* Modal Animation */
+        .modal-content {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ======================================================================= -->
+    <!--                        UPPER PART (MAIN APP)                            -->
+    <!-- ======================================================================= -->
+
+    <!-- Top Header -->
+    <header class="bg-white sticky top-0 z-30 border-b border-blue-100">
+        <div class="max-w-md mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <h1 class="text-xl font-bold text-blue-900">MediConnect</h1>
+            </div>
+            <!-- Removed User Profile Image as requested -->
+            <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                <i class="fas fa-user"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- Simple Welcome Section (Cleaned up) -->
+    <main class="max-w-md mx-auto px-4 py-6 space-y-6">
+        <div class="bg-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-200">
+            <h2 class="text-3xl font-bold">Hello!!</h2>
+            <p class="text-blue-100 mt-1">Health Dashboard</p>
+        </div>
+        
+        <!-- Empty space for future content (No unwanted parts) -->
+        <div class="py-10 text-center text-blue-300 text-sm">
+            <img src="./CC.jpg" alt="">
+            <!-- Main app content goes here -->
+        </div>
+    </main>
+
+
+    <br><br><br>
+    <!-- ======================================================================= -->
+    <!-- ======================================================================= -->
+    <!--                       SPACE SEPARATING UPPER & LOWER                    -->
+    <!-- ======================================================================= -->
+    <!-- ======================================================================= -->
+    <br><br><br>
+
+
+    <!-- ======================================================================= -->
+    <!--                    LOWER PART (FLOATING BOTTOM BAR)                     -->
+    <!-- ======================================================================= -->
+    
+    <div class="fixed bottom-0 left-0 w-full bg-white border-t border-blue-100 shadow-[0_-5px_20px_-5px_rgba(30,58,138,0.15)] z-40 pb-safe">
+        <div class="max-w-md mx-auto px-3 py-2">
+            <div class="grid grid-cols-4 gap-1 items-end">
+                
+                <!-- 1. SOS (Red for Safety, but fits layout) -->
+                <button onclick="triggerSOS()" class="flex flex-col items-center justify-center p-1 -mt-8 relative z-50">
+                    <div class="w-16 h-16 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg sos-pulse active:scale-95 transition-transform border-4 border-white">
+                        <span class="font-bold text-xl">SOS</span>
+                    </div>
+                    <span class="text-[10px] font-bold text-red-600 text-center mt-1">Emergency</span>
+                </button>
+
+                <!-- 2. Contact Doctor (Blue Theme) -->
+                <button onclick="openDoctorModal()" class="flex flex-col items-center justify-center p-2 space-y-1 group hover:bg-blue-50 rounded-lg transition-colors h-16">
+                    <i class="fas fa-user-md text-xl text-blue-600 mb-1 group-active:scale-90 transition-transform"></i>
+                    <span class="text-[10px] font-medium text-gray-600 text-center leading-tight">Contact<br>Doctor</span>
+                </button>
+
+                <!-- 3. Nearby Hospital (Blue Theme) -->
+                <a href="https://www.google.com/maps/search/hospitals+near+me" target="_blank" class="flex flex-col items-center justify-center p-2 space-y-1 group hover:bg-blue-50 rounded-lg transition-colors h-16">
+                    <i class="fas fa-hospital text-xl text-blue-600 mb-1 group-active:scale-90 transition-transform"></i>
+                    <span class="text-[10px] font-medium text-gray-600 text-center leading-tight">Nearby<br>Hospital</span>
+                </a>
+
+                <!-- 4. Medical Store (Blue Theme) -->
+                <a href="https://www.google.com/maps/search/medical+store+near+me" target="_blank" class="flex flex-col items-center justify-center p-2 space-y-1 group hover:bg-blue-50 rounded-lg transition-colors h-16">
+                    <i class="fas fa-pills text-xl text-blue-600 mb-1 group-active:scale-90 transition-transform"></i>
+                    <span class="text-[10px] font-medium text-gray-600 text-center leading-tight">Medical<br>Store</span>
+                </a>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!--           HIDDEN MODALS BELOW              -->
+    <!-- ========================================== -->
+
+    <!-- Doctor Modal -->
+    <div id="doctorModal" class="fixed inset-0 bg-blue-900/60 z-50 hidden items-end justify-center sm:items-center backdrop-blur-sm" onclick="closeDoctorModal(event)">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 modal-content transform translate-y-full" id="doctorModalContent" onclick="event.stopPropagation()">
+            
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-blue-900">Select Doctor</h3>
+                    <p class="text-xs text-blue-500">Available specialists</p>
+                </div>
+                <button onclick="closeDoctorModal()" class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 hover:bg-blue-100">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Doctors List (Indian Names) -->
+            <div class="space-y-3 max-h-[60vh] overflow-y-auto hide-scrollbar pb-4">
+                
+                <!-- Doctor 1 -->
+                <div class="flex items-center p-3 border border-blue-100 rounded-2xl hover:shadow-md transition bg-white">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3 font-bold text-lg">R</div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-gray-800 text-sm">Dr. Rajesh Kumar</h4>
+                        <p class="text-xs text-blue-600 font-medium">Cardiologist</p>
+                    </div>
+                    <a href="tel:+919876543210" class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm hover:bg-blue-700 active:scale-95 transition">
+                        <i class="fas fa-phone-alt"></i>
+                    </a>
+                </div>
+
+                <!-- Doctor 2 -->
+                <div class="flex items-center p-3 border border-blue-100 rounded-2xl hover:shadow-md transition bg-white">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3 font-bold text-lg">A</div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-gray-800 text-sm">Dr. Anjali Sharma</h4>
+                        <p class="text-xs text-blue-600 font-medium">General Physician</p>
+                    </div>
+                    <a href="tel:+919876543211" class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm hover:bg-blue-700 active:scale-95 transition">
+                        <i class="fas fa-phone-alt"></i>
+                    </a>
+                </div>
+                 <!-- Doctor 3 -->
+                 <div class="flex items-center p-3 border border-blue-100 rounded-2xl hover:shadow-md transition bg-white">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3 font-bold text-lg">V</div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-gray-800 text-sm">Dr. Vikram Singh</h4>
+                        <p class="text-xs text-blue-600 font-medium">Orthopedic</p>
+                    </div>
+                    <a href="tel:+919876543211" class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm hover:bg-blue-700 active:scale-95 transition">
+                        <i class="fas fa-phone-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SOS Modal -->
+    <div id="sosModal" class="fixed inset-0 bg-red-600 z-[60] hidden flex-col items-center justify-center text-white p-6 text-center">
+        <div class="relative z-10">
+            <i class="fas fa-ambulance text-6xl mb-4 animate-bounce"></i>
+            <h2 class="text-4xl font-black mb-2 tracking-tighter">EMERGENCY</h2>
+            <div class="grid gap-4 w-full max-w-xs mx-auto mt-8">
+                <a href="tel:112" class="bg-white text-red-600 font-bold py-4 px-8 rounded-2xl shadow-xl flex items-center justify-center text-lg">
+                    Call 112
+                </a>
+                <button onclick="cancelSOS()" class="mt-4 text-white underline">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function triggerSOS() {
+            const modal = document.getElementById('sosModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        function cancelSOS() {
+            const modal = document.getElementById('sosModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+        function openDoctorModal() {
+            const modal = document.getElementById('doctorModal');
+            const content = document.getElementById('doctorModalContent');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            requestAnimationFrame(() => content.classList.remove('translate-y-full'));
+        }
+        function closeDoctorModal(event) {
+            if (event && event.target.id !== 'doctorModal') return;
+            const modal = document.getElementById('doctorModal');
+            const content = document.getElementById('doctorModalContent');
+            content.classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Healthcare Contact Section</title>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: "Poppins", sans-serif;
+        background: #eef3ff;
+    }
+
+    .contact-section {
+        display: flex;
+        justify-content: center;
+        padding: 50px 20px;
+    }
+
+    .contact-container {
+        width: 850px;
+        background: white;
+        padding: 35px;
+        border-radius: 20px;
+        box-shadow: 0 10px 35px rgba(0,0,0,0.15);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 35px;
+    }
+
+    .left, .right {
+        display: flex;
+        flex-direction: column;
+    }
+
+    h2 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #2962ff;
+        margin-bottom: 10px;
+    }
+
+    p {
+        font-size: 15px;
+        color: #444;
+        line-height: 1.6;
+    }
+
+    .info-box {
+        background: #f0f4ff;
+        padding: 15px;
+        border-radius: 12px;
+        margin-top: 15px;
+        border-left: 4px solid #2962ff;
+    }
+
+    .info-title {
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #222;
+    }
+
+    .icon {
+        width: 30px;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+
+    input, textarea {
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        border: 2px solid #d8dcef;
+        outline: none;
+        margin-bottom: 15px;
+        font-size: 15px;
+        transition: 0.3s;
+    }
+
+    input:focus, textarea:focus {
+        border-color: #2962ff;
+    }
+
+    textarea {
+        resize: none;
+        height: 130px;
+    }
+
+    button {
+        padding: 12px;
+        background: #2962ff;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: 0.3s;
+    }
+
+    button:hover {
+        background: #003ecb;
+    }
+
+    @media(max-width: 768px) {
+        .contact-container {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+</head>
+<body>
+
+<section class="contact-section">
+    <div class="contact-container">
+
+        <!-- LEFT SIDE / DETAILS -->
+        <div class="left">
+            <h2>Contact Us</h2>
+            <p>If you have any questions, feel free to reach out.  
+               Our healthcare team is always ready to assist you.</p>
+
+            <div class="info-box">
+                <div class="info-title">
+                    <img src="https://cdn-icons-png.flaticon.com/128/535/535239.png" class="icon">
+                    Hospital Address
+                </div>
+                ABC Health Care Center,<br>
+                2nd Floor, BlueCity Complex,<br>
+                Pune, Maharashtra – 411001
+            </div>
+
+            <div class="info-box">
+                <div class="info-title">
+                    <img src="https://cdn-icons-png.flaticon.com/128/159/159832.png" class="icon">
+                    Phone Number
+                </div>
+                +91 98765 43210
+            </div>
+
+            <div class="info-box">
+                <div class="info-title">
+                    <img src="https://cdn-icons-png.flaticon.com/128/732/732200.png" class="icon">
+                    Email
+                </div>
+                support@healthcare.com
+            </div>
+
+            <div class="info-box" style="background:#ffe5e5;border-left-color:#ff4b4b;">
+                <div class="info-title" style="color:#ff2e2e;">
+                    <img src="https://cdn-icons-png.flaticon.com/128/943/943593.png" class="icon">
+                    Emergency Help
+                </div>
+                Call: 108 (Ambulance)<br>
+                Available 24/7
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE / FORM -->
+        <div class="right">
+            <h2>Send Message</h2>
+
+            <input type="text" placeholder="Full Name">
+            <input type="email" placeholder="Email Address">
+            <input type="text" placeholder="Phone Number">
+
+            <textarea placeholder="Write your message..."></textarea>
+
+            <button>Send Message</button>
+        </div>
+
+    </div>
+</section>
+
+</body>
+</html>

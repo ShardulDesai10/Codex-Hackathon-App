@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Symptom Checker</title>
+
+    <style>
+      body {
+        margin: 0;
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(135deg, #6a85f1, #b9e0ff);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        width: 40%;
+        height: 50%;
+
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 18px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        animation: fadeIn 0.5s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      h2 {
+        margin-top: 0;
+        font-size: 22px;
+        text-align: center;
+        color: #333;
+      }
+
+      input {
+        width: 100%;
+        padding: 12px;
+        margin-top: 10px;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        font-size: 15px;
+        transition: 0.3s;
+      }
+
+      input:focus {
+        border-color: #4a7bff;
+        box-shadow: 0 0 5px #4a7bff;
+      }
+
+      button {
+        width: 100%;
+        background: #2962ff;
+        color: white;
+        padding: 12px;
+        font-size: 16px;
+        border: none;
+        border-radius: 10px;
+        margin-top: 15px;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+
+      button:hover {
+        background: #0039cb;
+      }
+
+      .tags {
+        margin-top: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .tag {
+        background: #e0e7ff;
+        color: #1e3a8a;
+        padding: 8px 14px;
+        border-radius: 12px;
+        font-size: 14px;
+        cursor: pointer;
+        border: 1px solid #a5b4fc;
+        transition: 0.3s;
+      }
+
+      .tag:hover {
+        background: #c7d2fe;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h2>🩺 Symptom Solutions</h2>
+
+      <input
+        type="text"
+        placeholder="Describe symptoms... e.g. fever, cough, stomach pain"
+      />
+
+      <button>Check</button>
+
+      <div class="tags">
+        <div class="tag">
+          <a href="./FEVER.html"><h3>Fever</h3></a>
+        </div>
+        <div class="tag">
+          <a href="./COUGH.html"><h3>Cough</h3></a>
+        </div>
+        <div class="tag">
+          <a href="./STOMACH.pain.html"><h3>Stomach Pain</h3></a>
+        </div>
+        <div class="tag">
+          <a href="./HEADACHE.html"><h3>HeadAche</h3></a>
+        </div>
+        <div class="tag">
+            <a href="./VOMITING.html"><h3>Vomiting</h3></a>
+        </div>
+        <div class="tag">
+          <a href="./PREGENANCY.html"><h3>Pregenancy</h3></a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

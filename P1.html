@@ -1,0 +1,351 @@
+<!--
+Offline Health Assistant - Single-file web app (index.html)
+Also includes a service worker (sw.js) below — save it as a separate file named sw.js in same folder.
+This app works offline (PWA-ready), stores users/messages/reminders locally, includes a simple rule-based symptom checker,
+and supports English, Hindi, Marathi. Open index.html in a modern browser (Chrome/Edge/Firefox). For full offline install, serve via a local server (e.g., npx http-server) and then install as PWA.
+-->
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Offline Health Assistant</title>
+  <meta name="description" content="Offline Health Assistant - Symptom checker, health tips, reminders (works offline)">
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root{--accent:#0d6efd}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;margin:0;background:#f4f6f8;color:#222}
+    header{background:var(--accent);color:#fff;padding:18px 16px}
+    .container{max-width:980px;margin:18px auto;padding:0 16px}
+    .card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 6px 20px rgba(28,40,50,0.06);margin-bottom:14px}
+    .flex{display:flex;gap:10px}
+    .btn{background:var(--accent);color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
+    .btn.secondary{background:#6c757d}
+    label{font-weight:600;font-size:0.9rem}
+    select,input,textarea{width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-top:6px}
+    .small{font-size:0.9rem;color:#555}
+    .hint{font-size:0.85rem;color:#666}
+    ul.tips{padding-left:18px}
+    .lang-btn{background:transparent;border:1px solid rgba(255,255,255,0.35);color:#fff;padding:6px 8px;border-radius:8px;margin-left:6px}
+    .reminder-row{display:flex;gap:8px;align-items:center}
+    .pill{display:inline-block;padding:6px 8px;border-radius:999px;background:#eef3ff;color:var(--accent);font-weight:600}
+    footer{padding:12px;text-align:center;color:#666;font-size:0.9rem}
+    @media (max-width:600px){ .flex{flex-direction:column} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <h1 style="margin:0;font-size:1.2rem">Offline Health Assistant</h1>
+        <div class="small">Symptom checker • Health tips • Reminders — Offline-ready</div>
+      </div>
+      <div>
+        <button class="lang-btn" id="langEn">EN</button>
+        <button class="lang-btn" id="langHi">HI</button>
+        <button class="lang-btn" id="langMr">MR</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <label id="lbl_symptom">Describe symptoms (or pick common):</label>
+      <div style="margin:8px 0" class="flex">
+        <input id="symptomInput" placeholder="fever, cough, stomach pain..." />
+        <button class="btn" id="btnCheck">Check</button>
+      </div>
+      <div class="hint" id="symptomHint">Tip: type short phrases like "fever and headache" or choose a button.</div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn secondary" data-symp="fever">Fever</button>
+        <button class="btn secondary" data-symp="cough">Cough</button>
+        <button class="btn secondary" data-symp="headache">Headache</button>
+        <button class="btn secondary" data-symp="stomach">Stomach pain</button>
+        <button class="btn secondary" data-symp="pregnancy">Pregnancy</button>
+      </div>
+    </div>
+
+    <div class="card" id="resultCard" style="display:none">
+      <h3 id="resultTitle">Possible condition</h3>
+      <div id="resultText" class="small"></div>
+      <div style="margin-top:10px">
+        <strong>Advice:</strong>
+        <ul id="adviceList"></ul>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn" id="btnAddReminder">Add Reminder</button>
+        <button class="btn secondary" id="btnEmergency">Emergency Contacts</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 id="tipsTitle">Health Tips</h3>
+      <div id="tipsList" class="small">
+        <ul class="tips" id="tipsUl"></ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 id="remTitle">Reminders</h3>
+      <div id="remForm" style="margin-bottom:10px">
+        <label id="lbl_rem_text">Reminder text</label>
+        <input id="remText" placeholder="Take iron tablet / Visit clinic" />
+        <label style="margin-top:8px" id="lbl_rem_time">When (local date & time)</label>
+        <input id="remTime" type="datetime-local" />
+        <div style="margin-top:8px" class="flex">
+          <button class="btn" id="btnSaveRem">Save Reminder</button>
+          <button class="btn secondary" id="btnClearRem">Clear Done</button>
+        </div>
+      </div>
+      <div id="remList"></div>
+    </div>
+
+    <div class="card">
+      <h3 id="emTitle">Emergency Contacts</h3>
+      <div class="small">Add local emergency contacts (saved locally).</div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <input id="ecName" placeholder="Name (e.g., PHC)" />
+        <input id="ecPhone" placeholder="Phone (+919...)" />
+        <button class="btn" id="btnAddEc">Add</button>
+      </div>
+      <div id="ecList" style="margin-top:10px"></div>
+    </div>
+
+  </main>
+
+  <footer>
+    Offline-first demo • Works without mobile data • Save page as PWA for installability
+  </footer>
+
+<script>
+/* Offline Health Assistant - in-page JS */
+const DEFAULT_LANG = localStorage.getItem('ha_lang') || 'en';
+let LANG = DEFAULT_LANG;
+const translations = {
+  en: {
+    'Describe symptoms (or pick common):':'Describe symptoms (or pick common):',
+    'Tip: type short phrases like "fever and headache" or choose a button.':'Tip: type short phrases like "fever and headache" or choose a button.',
+    'Possible condition': 'Possible condition',
+    'Advice:': 'Advice:',
+    'Health Tips': 'Health Tips',
+    'Reminders': 'Reminders',
+    'Reminder text': 'Reminder text',
+    'When (local date & time)':'When (local date & time)'
+  },
+  hi: {
+    'Describe symptoms (or pick common):':'लक्षण लिखें (या सामान्य चुनें):',
+    'Tip: type short phrases like "fever and headache" or choose a button.':'सुझाव: छोटा वाक्य टाइप करें जैसे "बुखार और सिरदर्द" या बटन चुनें।',
+    'Possible condition':'संभव स्थिति',
+    'Advice:':'सलाह:',
+    'Health Tips':'स्वास्थ्य सुझाव',
+    'Reminders':'रिमाइंडर',
+    'Reminder text':'रिमाइंडर टेक्स्ट',
+    'When (local date & time)':'कब (स्थानीय तिथि व समय)'
+  },
+  mr: {
+    'Describe symptoms (or pick common):':'लक्षण लिहा (किंवा सामान्य निवडा):',
+    'Tip: type short phrases like "fever and headache" or choose a button.':'सूचना: छोटे वाक्य टाइप करा जसे "ताप व डोकेदुखी" किंवा बटण निवडा.',
+    'Possible condition':'संभाव्य स्थिती',
+    'Advice:':'सल्ला:',
+    'Health Tips':'आरोग्य टिप्स',
+    'Reminders':'रिमाइंडर',
+    'Reminder text':'रिमाइंडर मजकूर',
+    'When (local date & time)':'केव्हा (स्थानिक तारीख आणि वेळ)'
+  }
+};
+
+function t(k){ return (translations[LANG] && translations[LANG][k]) || k; }
+
+// UI elements
+const symptomInput = document.getElementById('symptomInput');
+const btnCheck = document.getElementById('btnCheck');
+const resultCard = document.getElementById('resultCard');
+const resultTitle = document.getElementById('resultTitle');
+const resultText = document.getElementById('resultText');
+const adviceList = document.getElementById('adviceList');
+const tipsUl = document.getElementById('tipsUl');
+const tipsTitle = document.getElementById('tipsTitle');
+const remList = document.getElementById('remList');
+
+// Simple rule-based symptom checker knowledge base
+const KB = [
+  {keywords:['fever','temperature','high temp','feverish'], condition:'Fever / Infection', advice:['Rest and drink plenty of fluids. Monitor temperature. Seek medical help if fever > 38°C for more than 2 days or difficulty breathing.']},
+  {keywords:['cough','cold','sore throat'], condition:'Cough / Upper respiratory infection', advice:['Stay hydrated, steam inhalation, seek medical care if cough worsens or breathing difficulty occurs.']},
+  {keywords:['headache','migraine'], condition:'Headache / Migraine', advice:['Rest in a quiet, dark place. Over-the-counter pain relief if safe. See doctor if severe or sudden onset.']},
+  {keywords:['stomach','abdominal','vomit','nausea'], condition:'Stomach upset / Gastroenteritis', advice:['Keep hydrated with ORS, avoid solid foods if vomiting. Seek help for persistent vomiting or blood in stool.']},
+  {keywords:['pregnancy','pregnant'], condition:'Pregnancy - routine care', advice:['Attend antenatal visits, take prescribed supplements (iron, folic acid), follow nutrition advice.']}
+];
+
+const defaultTips = {
+  en:[
+    'Wash hands regularly with soap for 20 seconds.',
+    'Drink safe, boiled or filtered water.',
+    'Keep surroundings clean to prevent mosquito breeding.',
+    'Vaccination protects children — follow the schedule.'
+  ],
+  hi:[
+    'हाथ साबुन से 20 सेकंड तक धोएं।',
+    'सुरक्षित, उबला या फ़िल्टर किया पानी पिएं।',
+    'मच्छरों के प्रजनन को रोकने के लिए आसपास साफ रखें।',
+    'बच्चों के लिए टीकाकरण अनुसूची का पालन करें।'
+  ],
+  mr:[
+    'हात साबणाने 20 सेकंद धुवा.',
+    'सुरक्षित उकळलेले किंवा फिल्टर केलेले पाणी प्या.',
+    'माशींच्या पाण्याचे ठिकाण दूर करा.',
+    'बाळासाठी लस देण्याच्या वेळापत्रकाचे पालन करा.'
+  ]
+};
+
+// Local storage keys
+const LS_REM = 'ha_reminders_v1';
+const LS_EC = 'ha_emergency_v1';
+
+// Initialize language UI
+function setLang(newLang){ LANG=newLang; localStorage.setItem('ha_lang',LANG); document.getElementById('lbl_symptom').textContent = t('Describe symptoms (or pick common):'); document.getElementById('symptomHint').textContent = t('Tip: type short phrases like "fever and headache" or choose a button.'); resultTitle.textContent = t('Possible condition'); document.getElementById('lbl_rem_text').textContent = t('Reminder text'); document.getElementById('lbl_rem_time').textContent = t('When (local date & time)'); tipsTitle.textContent = t('Health Tips'); document.getElementById('remTitle').textContent = t('Reminders'); document.getElementById('emTitle').textContent = t('Emergency Contacts'); renderTips(); }
+
+document.getElementById('langEn').onclick=()=>setLang('en');
+document.getElementById('langHi').onclick=()=>setLang('hi');
+document.getElementById('langMr').onclick=()=>setLang('mr');
+setLang(LANG);
+
+// Render tips
+function renderTips(){ tipsUl.innerHTML=''; (defaultTips[LANG]||defaultTips.en).forEach(x=>{ const li=document.createElement('li'); li.textContent=x; tipsUl.appendChild(li); }); }
+
+// Symptom check
+function checkSymptoms(text){ const txt = text.toLowerCase(); // simple keyword match
+  for(const rule of KB){ for(const kw of rule.keywords){ if(txt.includes(kw)) return rule; } }
+  return null;
+}
+
+btnCheck.onclick = ()=>{
+  const txt = symptomInput.value.trim(); if(!txt){ alert(LANG==='hi' ? 'कृपया लक्षण टाइप करा' : (LANG==='mr' ? 'कृपया लक्षण टाइप करा' : 'Please type symptoms')); return; }
+  const res = checkSymptoms(txt);
+  if(res){ resultCard.style.display='block'; resultTitle.textContent = res.condition; resultText.textContent = '';
+    adviceList.innerHTML=''; res.advice.forEach(a=>{ const li=document.createElement('li'); li.textContent=a; adviceList.appendChild(li); });
+  } else {
+    resultCard.style.display='block'; resultTitle.textContent = LANG==='hi'? 'सामान्य: परामर्श आवश्यक' : (LANG==='mr'? 'सामान्य: सल्ल्याची गरज' : 'General: Seek advice'); resultText.textContent = LANG==='hi' ? 'लक्षण स्पष्ट नाही — नजीकच्या आरोग्य केंद्राचा सल्ला घ्या.' : (LANG==='mr'? 'लक्षण स्पष्ट नाही — नजीकच्या आरोग्य केंद्राचा सल्ला घ्या.' : 'Symptoms unclear — consult a nearby health worker.'); adviceList.innerHTML=''; const li=document.createElement('li'); li.textContent = LANG==='hi' ? 'लक्षण जास्त राहिल्यास डॉक्टरांचा सल्ला घ्या.' : (LANG==='mr' ? 'लक्षण वाढल्यास डॉक्टरांचा सल्ला घ्या.' : 'If symptoms persist, seek medical help.'); adviceList.appendChild(li);
+  }
+}
+
+// Quick symptom buttons
+document.querySelectorAll('button[data-symp]').forEach(b=> b.onclick = ()=>{ const s=b.dataset.symp; symptomInput.value = s; btnCheck.click(); });
+
+// Reminders logic
+function loadReminders(){ try{ return JSON.parse(localStorage.getItem(LS_REM) || '[]'); }catch(e){ return []; } }
+function saveReminders(list){ localStorage.setItem(LS_REM, JSON.stringify(list)); }
+function renderReminders(){ const list = loadReminders(); remList.innerHTML=''; if(list.length===0) remList.innerHTML='<div class="small hint">No reminders set.</div>';
+  list.forEach((r,i)=>{
+    const d = new Date(r.time);
+    const div = document.createElement('div'); div.className='reminder-row'; div.style.marginBottom='8px';
+    div.innerHTML = <div style="flex:1"><strong>${r.text}</strong><div class='small'>${d.toLocaleString()}</div></div><div><button class='btn' data-i='${i}' data-act='done'>Done</button></div>;
+    remList.appendChild(div);
+  });
+  document.querySelectorAll('button[data-act="done"]').forEach(b=> b.onclick = e=>{ const i=e.target.dataset.i; const arr=loadReminders(); arr.splice(i,1); saveReminders(arr); renderReminders(); }); }
+
+document.getElementById('btnSaveRem').onclick = ()=>{
+  const text = document.getElementById('remText').value.trim(); const time = document.getElementById('remTime').value; if(!text||!time){ alert('Please fill reminder text and time'); return; }
+  const list = loadReminders(); list.push({text, time}); saveReminders(list); renderReminders(); scheduleReminderNotifications(); document.getElementById('remText').value=''; document.getElementById('remTime').value=''; }
+
+document.getElementById('btnClearRem').onclick = ()=>{ if(confirm('Clear all reminders?')){ saveReminders([]); renderReminders(); } }
+
+renderReminders();
+
+// Emergency contacts
+function loadEC(){ try{ return JSON.parse(localStorage.getItem(LS_EC) || '[]'); }catch(e){ return []; } }
+function saveEC(arr){ localStorage.setItem(LS_EC, JSON.stringify(arr)); }
+function renderEC(){ const list = loadEC(); const ecList = document.getElementById('ecList'); ecList.innerHTML=''; if(list.length===0) ecList.innerHTML='<div class="small hint">No emergency contacts added.</div>';
+  list.forEach((e,i)=>{ const div=document.createElement('div'); div.style.marginBottom='6px'; div.innerHTML = <strong>${e.name}</strong> <span class='small'>${e.phone}</span> <button class='btn secondary' data-i='${i}'>Delete</button> <button class='btn' onclick="callNumber('${e.phone}')">Call</button>; ecList.appendChild(div); }); document.querySelectorAll('#ecList .btn.secondary').forEach(b=> b.onclick = ev=>{ const i=ev.target.dataset.i; const arr=loadEC(); arr.splice(i,1); saveEC(arr); renderEC(); }); }
+
+document.getElementById('btnAddEc').onclick = ()=>{ const name=document.getElementById('ecName').value.trim(); const phone=document.getElementById('ecPhone').value.trim(); if(!name||!phone){ alert('Please enter both'); return; } const arr=loadEC(); arr.push({name,phone}); saveEC(arr); document.getElementById('ecName').value=''; document.getElementById('ecPhone').value=''; renderEC(); }
+
+function callNumber(num){ // this will open phone dialer on mobile devices supporting tel: links
+  window.location.href = 'tel:' + num;
+}
+renderEC();
+
+// Simple notification scheduler (works when page is open; for PWA and service worker push, server required)
+function scheduleReminderNotifications(){ const list = loadReminders(); const now = Date.now(); for(const r of list){ const t = new Date(r.time).getTime(); const delay = t - now; if(delay>0 && delay < 7*24*60*60*1000){ // only schedule within 7 days to avoid long timers
+      setTimeout(()=>{ showLocalNotification('Reminder', r.text); }, delay);
+    }
+  }
+}
+
+function showLocalNotification(title, body){ if('Notification' in window){ if(Notification.permission === 'granted'){ new Notification(title, {body}); } else if(Notification.permission !== 'denied'){ Notification.requestPermission().then(p=>{ if(p==='granted') new Notification(title,{body}); }); } } else { alert(title + '\n' + body); } }
+
+scheduleReminderNotifications();
+
+// Emergency button: show stored contacts in modal-like alert
+document.getElementById('btnEmergency').onclick = ()=>{ const ecs = loadEC(); if(ecs.length===0){ alert('No emergency contacts. Add local PHC numbers.'); return; } let txt = 'Emergency contacts:\n'; ecs.forEach(e=> txt += e.name + ': ' + e.phone + '\n'); alert(txt); }
+
+// Basic persistence: uses localStorage so data stays offline.
+
+// Request notification permission on first load
+if(window.Notification && Notification.permission !== 'granted' && Notification.permission !== 'denied'){
+  try{ Notification.requestPermission(); }catch(e){}
+}
+
+// Service worker registration for offline caching
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').then(()=> console.log('SW registered')).catch(e=>console.warn('SW failed',e)); }
+
+</script>
+
+<!--
+Below: content for sw.js - save as a separate file named sw.js in same folder as index.html
+-->
+
+<!-- sw.js START -->
+<!-- Save the following as sw.js -->
+
+/*
+Simple service worker to cache app shell and support offline use.
+*/
+
+const SW_CACHE = 'ha-cache-v1';
+const ASSETS = [
+  '/', // when serving from a server
+  '/index.html',
+  // if hosting as files, some browsers may not request '/', but index.html will be used.
+];
+
+self.addEventListener('install', (evt) => {
+  evt.waitUntil(
+    caches.open(SW_CACHE).then(cache => {
+      // try to cache index.html and the main page
+      return cache.addAll(['/index.html']).catch(()=>{});
+    })
+  );
+});
+
+self.addEventListener('fetch', (evt) => {
+  const url = new URL(evt.request.url);
+  // For navigation requests, serve cached index.html fallback
+  if(evt.request.mode === 'navigate'){
+    evt.respondWith(
+      fetch(evt.request).catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+  evt.respondWith(
+    caches.match(evt.request).then(res => res || fetch(evt.request))
+  );
+});
+
+self.addEventListener('activate', (evt) => {
+  evt.waitUntil(caches.keys().then(keys => Promise.all(
+    keys.filter(k => k !== SW_CACHE).map(k => caches.delete(k))
+  )));
+});
+
+<!-- sw.js END -->
+
+<!--
+Instructions:
+1) Save the entire top part as index.html and save the sw.js section as sw.js in the same folder.
+2) (Optional) Create a minimal manifest.json to enable PWA install prompt, or serve via a local server:
+   { "name":"Offline Health Assistant", "short_name":"HealthAssist", "start_url":"/index.html", "display":"standalone", "icons": [] }
+3) For best PWA behavior, serve over localhost or HTTPS. Use npx http-server or python -m http.server.
+
+If you want, I can also generate a Node/Express backend that can serve this and add push notifications via VAPID, or transform this into an Android WebView APK. काय हवंय? (What would you like next?)
+-->

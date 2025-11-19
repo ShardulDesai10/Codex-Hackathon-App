@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediRemind - Tablet Reminder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(37, 99, 235, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+        }
+        .animate-pulse-ring {
+            animation: pulse-ring 2s infinite;
+        }
+        
+        /* Custom Checkbox Style */
+        .custom-checkbox:checked {
+            background-color: #2563eb;
+            border-color: #2563eb;
+            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800">
+
+    <!-- Active Alarm Modal (Hidden by default) -->
+    <div id="alarm-modal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border-4 border-blue-500">
+            <div class="mb-6 flex justify-center">
+                <div class="bg-blue-100 p-6 rounded-full animate-pulse-ring">
+                    <i data-lucide="bell" class="w-16 h-16 text-blue-600"></i>
+                </div>
+            </div>
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">Medication Time!</h2>
+            <p class="text-xl text-slate-600 mb-8">Please take <span id="alarm-pill-name" class="font-bold text-blue-600">Medicine</span></p>
+            
+            <div class="flex flex-col gap-3">
+                <button id="btn-taken-modal" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-lg transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <i data-lucide="check" class="w-6 h-6"></i> I've Taken It
+                </button>
+                <button id="btn-snooze" class="w-full py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-semibold transition-colors">
+                    Dismiss / Snooze
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-6 shadow-lg sticky top-0 z-10">
+        <div class="max-w-3xl mx-auto flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <i data-lucide="pill" class="w-8 h-8"></i>
+                <h1 class="text-2xl font-bold tracking-tight">MediRemind</h1>
+            </div>
+            <!-- Added Test Sound Button -->
+            <button onclick="playBeepSound()" class="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full font-medium transition-colors">
+                Test Sound
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto p-4 md:p-6 space-y-8">
+        
+        <!-- Add Reminder Form -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100">
+                <h2 class="text-lg font-semibold flex items-center gap-2 text-slate-700">
+                    <i data-lucide="clock" class="w-5 h-5 text-blue-500"></i> Set New Reminder
+                </h2>
+            </div>
+            <form id="reminder-form" class="p-6 bg-slate-50/50">
+                <div class="space-y-4">
+                    <!-- Pill Name -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Tablet / Pill Name</label>
+                        <input type="text" id="pill-name" placeholder="e.g. Vitamin D, Amoxicillin..." class="w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white" required>
+                    </div>
+
+                    <!-- Time Selection -->
+                    <div class="grid grid-cols-3 gap-2 md:gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Hour</label>
+                            <select id="hour-select" class="w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-white">
+                                <!-- JS will populate this -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Minute</label>
+                            <select id="minute-select" class="w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-white">
+                                <!-- JS will populate this -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Period</label>
+                            <div class="flex bg-white rounded-xl border border-slate-300 p-1 h-[48px]">
+                                <button type="button" id="btn-am" class="flex-1 rounded-lg text-sm font-bold transition-all bg-blue-100 text-blue-700 shadow-sm">AM</button>
+                                <button type="button" id="btn-pm" class="flex-1 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-slate-600">PM</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Date & Frequency -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Date</label>
+                            <input type="date" id="date-input" class="w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white disabled:bg-slate-100 disabled:text-slate-400 transition-all">
+                        </div>
+                        <!-- Fixed: Changed div to label and removed onclick to prevent double-toggling -->
+                        <label class="h-[48px] flex items-center px-4 bg-white rounded-xl border border-slate-300 hover:border-blue-400 transition-colors cursor-pointer">
+                            <input type="checkbox" id="daily-check" class="custom-checkbox w-5 h-5 border-2 border-slate-300 rounded focus:ring-blue-500 cursor-pointer appearance-none bg-white transition-all checked:bg-blue-600 checked:border-blue-600" checked>
+                            <span class="ml-3 text-sm font-medium text-slate-700 select-none">Repeat Daily</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 mt-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95">
+                        <i data-lucide="plus" class="w-5 h-5"></i> Add Schedule
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Reminders List -->
+        <div class="space-y-4">
+            <h2 class="text-xl font-bold text-slate-800 px-2">Your Schedule</h2>
+            <div id="reminders-list" class="grid gap-3 sm:grid-cols-2">
+                <!-- Reminders will be injected here -->
+            </div>
+            
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden text-center py-12 bg-white rounded-2xl border border-slate-200 border-dashed">
+                <div class="bg-slate-50 inline-block p-4 rounded-full mb-3">
+                    <i data-lucide="calendar" class="w-8 h-8 text-slate-300"></i>
+                </div>
+                <p class="text-slate-500">No reminders set yet.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Permission Banner -->
+    <div id="permission-banner" class="hidden fixed bottom-0 left-0 right-0 bg-blue-600 text-white p-4 text-center z-40">
+        <p class="text-sm mb-2">Please enable notifications to receive alerts even when the app is in the background.</p>
+        <button id="btn-enable-notifications" class="bg-white text-blue-600 px-4 py-1 rounded-full text-sm font-bold">
+            Enable Notifications
+        </button>
+    </div>
+
+    <script>
+        // --- State Management ---
+        let reminders = JSON.parse(localStorage.getItem('tabletReminders')) || [];
+        let ampm = 'AM';
+        let activeAlarmId = null;
+        let audioCtx = null;
+
+        // --- DOM Elements ---
+        const form = document.getElementById('reminder-form');
+        const pillNameInput = document.getElementById('pill-name');
+        const hourSelect = document.getElementById('hour-select');
+        const minuteSelect = document.getElementById('minute-select');
+        const btnAm = document.getElementById('btn-am');
+        const btnPm = document.getElementById('btn-pm');
+        const dateInput = document.getElementById('date-input');
+        const dailyCheck = document.getElementById('daily-check');
+        const remindersList = document.getElementById('reminders-list');
+        const emptyState = document.getElementById('empty-state');
+        
+        // Modal Elements
+        const modal = document.getElementById('alarm-modal');
+        const modalPillName = document.getElementById('alarm-pill-name');
+        const btnTakenModal = document.getElementById('btn-taken-modal');
+        const btnSnooze = document.getElementById('btn-snooze');
+
+        // --- Initialization ---
+
+        function init() {
+            populateSelects();
+            
+            // Set default date to today (Local Time)
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const today = `${year}-${month}-${day}`;
+            
+            dateInput.value = today;
+            dateInput.min = today; // Disable past dates
+            handleDailyToggle(); // Set initial state
+
+            renderReminders();
+            checkNotificationPermission();
+            lucide.createIcons();
+            
+            // Start Clock
+            setInterval(checkTime, 1000);
+            
+            // Midnight reset check
+            setInterval(checkMidnight, 60000);
+
+            // FIX FOR AUDIO: Unlock audio on first interaction
+            document.addEventListener('click', unlockAudio);
+            document.addEventListener('touchstart', unlockAudio);
+            document.addEventListener('keydown', unlockAudio);
+        }
+
+        // IMPORTANT: Function to unlock AudioContext on user gesture
+        function unlockAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            // Resume if suspended (this is the key fix for Chrome/VS Code)
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
+            // Remove listeners once running to save resources
+            if (audioCtx.state === 'running') {
+                document.removeEventListener('click', unlockAudio);
+                document.removeEventListener('touchstart', unlockAudio);
+                document.removeEventListener('keydown', unlockAudio);
+            }
+        }
+
+        function populateSelects() {
+            // Hours 1-12
+            for (let i = 1; i <= 12; i++) {
+                const opt = document.createElement('option');
+                opt.value = i < 10 ? '0' + i : i;
+                opt.textContent = i < 10 ? '0' + i : i;
+                if (i === 8) opt.selected = true; // Default to 08
+                hourSelect.appendChild(opt);
+            }
+            // Minutes 00-59
+            for (let i = 0; i < 60; i++) {
+                const opt = document.createElement('option');
+                opt.value = i < 10 ? '0' + i : i;
+                opt.textContent = i < 10 ? '0' + i : i;
+                minuteSelect.appendChild(opt);
+            }
+        }
+
+        function handleDailyToggle() {
+            if (dailyCheck.checked) {
+                dateInput.disabled = true;
+                dateInput.classList.add('opacity-50');
+            } else {
+                dateInput.disabled = false;
+                dateInput.classList.remove('opacity-50');
+            }
+        }
+
+        // --- Logic ---
+
+        function saveReminders() {
+            localStorage.setItem('tabletReminders', JSON.stringify(reminders));
+            renderReminders();
+        }
+
+        function addReminder(e) {
+            e.preventDefault();
+            const name = pillNameInput.value.trim();
+            if (!name) return;
+
+            const isDaily = dailyCheck.checked;
+            const selectedDate = isDaily ? null : dateInput.value;
+
+            if (!isDaily && !selectedDate) {
+                alert("Please select a date or check 'Repeat Daily'");
+                return;
+            }
+
+            const newReminder = {
+                id: Date.now(),
+                name: name,
+                hour: hourSelect.value,
+                minute: minuteSelect.value,
+                ampm: ampm,
+                isDaily: isDaily,
+                date: selectedDate,
+                taken: false
+            };
+
+            reminders.push(newReminder);
+            saveReminders();
+            
+            // Reset form partially
+            pillNameInput.value = '';
+            
+            // Trigger unlock audio here too just in case
+            unlockAudio();
+        }
+
+        function deleteReminder(id) {
+            reminders = reminders.filter(r => r.id !== id);
+            saveReminders();
+        }
+
+        function toggleTaken(id) {
+            reminders = reminders.map(r => {
+                if (r.id === id) return { ...r, taken: !r.taken };
+                return r;
+            });
+            saveReminders();
+            
+            // If we marked the currently ringing alarm as taken
+            if (activeAlarmId === id) {
+                stopAlarm();
+            }
+        }
+
+        // --- Alarm System ---
+
+        function checkTime() {
+            const now = new Date();
+            const seconds = now.getSeconds();
+
+            // Only trigger at 00 seconds to prevent multi-triggering
+            if (seconds !== 0) return;
+
+            let currentHour = now.getHours();
+            const currentAmpm = currentHour >= 12 ? 'PM' : 'AM';
+            currentHour = currentHour % 12;
+            currentHour = currentHour ? currentHour : 12; // '0' becomes '12'
+            
+            const currentMinute = now.getMinutes();
+            
+            // Format Current Date as YYYY-MM-DD based on local time
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const currentDateStr = `${year}-${month}-${day}`;
+
+            reminders.forEach(reminder => {
+                // Check Date Match (Either it's daily, OR the dates match)
+                const isDateMatch = reminder.isDaily || reminder.date === currentDateStr;
+
+                // Parse strings to ints for safe comparison
+                const rHour = parseInt(reminder.hour);
+                const rMinute = parseInt(reminder.minute);
+
+                if (
+                    isDateMatch &&
+                    !reminder.taken && 
+                    activeAlarmId === null &&
+                    rHour === currentHour &&
+                    rMinute === currentMinute &&
+                    reminder.ampm === currentAmpm
+                ) {
+                    triggerAlarm(reminder);
+                }
+            });
+        }
+
+        function checkMidnight() {
+            const now = new Date();
+            if (now.getHours() === 0 && now.getMinutes() === 0) {
+                // Only reset taken status for DAILY reminders
+                reminders = reminders.map(r => r.isDaily ? { ...r, taken: false } : r);
+                saveReminders();
+            }
+        }
+
+        function triggerAlarm(reminder) {
+            activeAlarmId = reminder.id;
+            
+            // Visual
+            modalPillName.textContent = reminder.name;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // Audio
+            playBeepSound();
+
+            // Notification
+            if (Notification.permission === "granted") {
+                new Notification(`Time to take ${reminder.name}`, {
+                    body: `It is ${reminder.hour}:${reminder.minute} ${reminder.ampm}. Take your medication!`,
+                    icon: 'https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/pill.svg'
+                });
+            }
+        }
+
+        function stopAlarm() {
+            activeAlarmId = null;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function playBeepSound() {
+            // Ensure context exists
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            // Ensure context is running (Critical for VS Code / Chrome)
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
+            const now = audioCtx.currentTime;
+            const beepCount = 5; 
+            
+            for (let i = 0; i < beepCount; i++) {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.value = 880;
+                
+                const startTime = now + i;
+                const beepLen = 0.5;
+                
+                osc.start(startTime);
+                
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.5, startTime + 0.05);
+                gain.gain.linearRampToValueAtTime(0, startTime + beepLen);
+                
+                osc.stop(startTime + beepLen);
+            }
+        }
+
+        // --- UI Rendering ---
+
+        function renderReminders() {
+            remindersList.innerHTML = '';
+            
+            if (reminders.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+
+            // Sort reminders: Taken last, then by time
+            const sortedReminders = [...reminders].sort((a, b) => {
+                if (a.taken !== b.taken) return a.taken ? 1 : -1;
+                return 0; 
+            });
+
+            sortedReminders.forEach(reminder => {
+                const div = document.createElement('div');
+                
+                const containerClass = reminder.taken 
+                    ? 'bg-slate-50 border-slate-200 opacity-70' 
+                    : 'bg-white border-blue-100 shadow-sm hover:shadow-md hover:border-blue-300';
+                
+                const timeClass = reminder.taken ? 'text-slate-400' : 'text-blue-600';
+                const nameClass = reminder.taken ? 'text-slate-500 line-through' : 'text-slate-800';
+                const badgeClass = reminder.taken ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700';
+                const badgeText = reminder.taken ? 'Taken' : 'Pending';
+                
+                // Date Label Logic
+                let dateLabel = '';
+                if (reminder.isDaily) {
+                    dateLabel = `<span class="flex items-center gap-1 text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-full"><i data-lucide="refresh-cw" class="w-3 h-3"></i> Daily</span>`;
+                } else {
+                    const dateParts = reminder.date.split('-');
+                    const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                    const dateStr = localDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                    dateLabel = `<span class="flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-full"><i data-lucide="calendar" class="w-3 h-3"></i> ${dateStr}</span>`;
+                }
+
+                div.className = `relative group p-5 rounded-2xl border transition-all duration-300 ${containerClass}`;
+                
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="${timeClass} text-3xl font-bold flex items-baseline gap-1">
+                            ${reminder.hour}:${reminder.minute}
+                            <span class="text-sm font-medium text-slate-400">${reminder.ampm}</span>
+                        </div>
+                        <button onclick="deleteReminder(${reminder.id})" class="p-2 rounded-lg text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors" aria-label="Delete">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h3 class="${nameClass} text-lg font-medium leading-tight">${reminder.name}</h3>
+                        <div class="mt-2">
+                            ${dateLabel}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-50">
+                        <span class="text-xs font-bold px-2 py-1 rounded uppercase tracking-wider ${badgeClass}">
+                            ${badgeText}
+                        </span>
+                        
+                        <button onclick="toggleTaken(${reminder.id})" class="text-sm ${reminder.taken ? 'text-slate-400 hover:text-slate-600' : 'text-blue-600 font-bold hover:text-blue-800 hover:underline'}">
+                            ${reminder.taken ? 'Undo' : 'Mark as taken'}
+                        </button>
+                    </div>
+                `;
+                
+                remindersList.appendChild(div);
+            });
+            
+            lucide.createIcons();
+        }
+
+        // --- Event Listeners ---
+
+        // AM/PM Toggles
+        btnAm.addEventListener('click', () => {
+            ampm = 'AM';
+            btnAm.className = "flex-1 rounded-lg text-sm font-bold transition-all bg-blue-100 text-blue-700 shadow-sm";
+            btnPm.className = "flex-1 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-slate-600";
+        });
+
+        btnPm.addEventListener('click', () => {
+            ampm = 'PM';
+            btnPm.className = "flex-1 rounded-lg text-sm font-bold transition-all bg-blue-100 text-blue-700 shadow-sm";
+            btnAm.className = "flex-1 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-slate-600";
+        });
+
+        // Daily Checkbox Toggle
+        dailyCheck.addEventListener('change', handleDailyToggle);
+
+        form.addEventListener('submit', addReminder);
+
+        // Modal Buttons
+        btnTakenModal.addEventListener('click', () => {
+            if (activeAlarmId) toggleTaken(activeAlarmId);
+            stopAlarm();
+        });
+
+        btnSnooze.addEventListener('click', stopAlarm);
+
+        // Notification Permissions
+        function checkNotificationPermission() {
+            if (!('Notification' in window)) return;
+            
+            if (Notification.permission === 'default') {
+                document.getElementById('permission-banner').classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('btn-enable-notifications').addEventListener('click', () => {
+            Notification.requestPermission().then(permission => {
+                if (permission !== 'default') {
+                    document.getElementById('permission-banner').classList.add('hidden');
+                }
+            });
+        });
+
+        // Initialize App
+        init();
+
+    </script>
+</body>
+</html>
